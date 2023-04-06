@@ -1,0 +1,267 @@
+-------------sw-ins-core-------------
+ena
+conf t
+host SW-INS-Core
+vtp mode server
+vtp domain bkacad
+vtp pass abc
+vtp ver 2
+
+vlan 10
+name tech
+exit
+vlan 20
+name INS
+exit
+vlan 30
+name staff
+exit
+vlan 40
+name student
+exit
+
+int vlan 10
+ip add 192.168.10.1 255.255.255.0
+ip help 10.0.2.2
+ex
+int vlan 20
+ip add 192.168.20.1 255.255.255.0
+ip help 10.0.2.2
+ex
+
+int f0/1
+no sw
+ip add 10.0.1.2 255.255.255.0
+no shut
+ex
+
+int f0/2
+sw trunk enc dot1q
+sw mo trunk
+ex
+
+int f0/4
+sw trunk enc dot1q
+sw mo trunk
+ex
+
+
+ip routing
+ip route 0.0.0.0 0.0.0.0 10.0.1.1
+do wr
+
+----------------sw-ins-1----------------
+ena
+conf t
+host SW-INS-1
+
+vtp domain bkacad
+vtp mod server
+vtp pass abc
+vtp ver 2
+
+int f0/24
+sw mo a
+sw a vlan 10
+exit
+int rang f0/1-23
+sw mo trunk
+exit
+
+ip def 192.168.10.1
+
+span mo p
+span vlan 10 p 4096
+span vlan 20 p 8192
+do wr
+
+----------------sw-ins-2----------------
+ena
+conf t
+host SW-INS-2
+
+vtp domain bkacad
+vtp mod server
+vtp pass abc
+vtp ver 2
+
+int f0/24
+sw mo a
+sw a vlan 20
+exit
+int rang f0/1-23
+sw mo trunk
+exit
+
+ip def 192.168.20.1
+
+
+span mo p
+span vlan 20 p 4096
+span vlan 10 p 8192
+do wr
+
+----------------switch0----------------
+ena
+conf t
+
+ip def 192.168.100.1
+
+do wr
+
+----------------DHCP----------------
+ena
+conf t
+host DHCP
+int g0/0
+ip add 10.0.2.2 255.255.255.0
+no shut
+ex
+int g0/1
+ip add 192.168.100.1 255.255.255.0
+no shut
+ex
+ip route 0.0.0.0 0.0.0.0 10.0.2.1
+service dhcp
+ip dhcp ex 192.168.100.1 192.168.100.20
+ip dhcp pool VLAN-POOL-100
+net 192.168.100.0 255.255.255.0
+def 192.168.100.1
+dns 10.0.2.2
+do bkacad.com
+exit
+service dhcp
+ip dhcp ex 192.168.10.1 192.168.10.20
+ip dhcp pool VLAN-POOL-10
+net 192.168.10.0 255.255.255.0
+def 192.168.10.1
+dns 10.0.2.2
+do bkacad.com
+exit
+service dhcp
+ip dhcp ex 192.168.20.1 192.168.20.20
+ip dhcp pool VLAN-POOL-20
+net 192.168.20.0 255.255.255.0
+def 192.168.20.1
+dns 10.0.2.2
+do bkacad.com
+exit
+service dhcp
+ip dhcp ex 192.168.30.1 192.168.30.20
+ip dhcp pool VLAN-POOL-30
+net 192.168.30.0 255.255.255.0
+def 192.168.30.1
+dns 10.0.2.2
+do bkacad.com
+exit
+service dhcp
+ip dhcp ex 192.168.40.1 192.168.40.20
+ip dhcp pool VLAN-POOL-40
+net 192.168.40.0 255.255.255.0
+def 192.168.40.1
+dns 10.0.2.2
+do bkacad.com
+exit
+do wr
+
+----------------Site-1----------------
+ena
+conf t
+host Site-1
+int g0/0
+ip add 10.0.3.1 255.255.255.0
+no shut
+ex
+int g0/1
+ip add 10.0.2.1 255.255.255.0
+no shut
+ex
+int g0/2
+ip add 10.0.1.1 255.255.255.0
+no shut
+ex
+int s0/0/0
+ip add 10.0.5.1 255.255.255.252
+no shut
+ex
+ip route 192.168.10.0 255.255.255.0 10.0.1.2
+ip route 192.168.20.0 255.255.255.0 10.0.1.2
+ip route 192.168.30.0 255.255.255.0 10.0.5.2
+ip route 192.168.40.0 255.255.255.0 10.0.5.2
+ip route 192.168.100.0 255.255.255.0 10.0.2.2
+ip route 0.0.0.0 0.0.0.0 10.0.3.2
+do wr
+
+----------------Site-2----------------
+ena
+conf t
+host Site-2
+int g0/0
+no shut
+ex
+int g0/0.30
+enc dot1q 30
+ip add 192.168.30.1 255.255.255.0
+ip help 10.0.2.2
+no shut
+ex
+int g0/0.40
+enc dot1q 40
+ip add 192.168.40.1 255.255.255.0
+ip help 10.0.2.2
+no shut
+ex
+int g0/1
+ip add 10.0.4.2 255.255.255.0
+no shut
+ex
+int s0/0/0
+ip add 10.0.5.2 255.255.255.252
+no shut
+ex
+ip route 192.168.10.0 255.255.255.0 10.0.5.1
+ip route 192.168.20.0 255.255.255.0 10.0.5.1
+ip route 192.168.100.0 255.255.255.0 10.0.5.1
+ip route 10.0.1.0 255.255.255.0 10.0.5.1
+ip route 10.0.2.0 255.255.255.0 10.0.5.1
+ip route 0.0.0.0 0.0.0.0 10.0.4.1
+do wr
+
+----------------SW-STAFF----------------
+ena
+conf t
+host SW-STAFF
+int f0/1
+sw mo trunk
+ex
+int f0/2
+sw mo a
+sw a vlan 40
+exit
+int f0/3
+sw mo a
+sw a vlan 30
+exit
+do wr
+
+----------------GATE----------------
+ena
+conf t
+host GATE
+int g0/0
+ip add 10.0.3.2 255.255.255.0
+no shut
+ex
+int g0/1
+ip add 10.0.4.1 255.255.255.0
+no shut
+ex
+ip route 192.168.10.0 255.255.255.0 10.0.3.1
+ip route 192.168.20.0 255.255.255.0 10.0.3.1
+ip route 192.168.30.0 255.255.255.0 10.0.4.2
+ip route 192.168.40.0 255.255.255.0 10.0.4.2
+ip route 10.0.1.0 255.255.255.0 10.0.3.1
+ip route 10.0.2.0 255.255.255.0 10.0.3.1
+ip route 10.0.5.0 255.255.255.252 10.0.4.2
+ip route 192.168.100.0 255.255.255.0 10.0.3.1
+do wr
